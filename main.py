@@ -1,4 +1,10 @@
 error_list = []
+operators_dict: dict = {'+': 1, '-': 1,
+                        '*': 2, '/': 2,
+                        '^': 3, '@': 5,
+                        '$': 5, '&': 5,
+                        '%': 4, '~': 6,
+                        '!': 6}
 
 
 class InputErrorException(RuntimeError):
@@ -10,7 +16,14 @@ class InputErrorException(RuntimeError):
 
 
 def check_input(inpt: str):
-    raise RuntimeError
+    opr_set = operators_dict.keys()
+    for char in inpt:
+        if char.isalpha():
+            raise InputErrorException
+        if char.isspace():
+            raise InputErrorException
+        if not operators_dict.__contains__(char) and not char.isdigit():
+            raise InputErrorException
 
 
 def interface() -> str:
@@ -18,8 +31,8 @@ def interface() -> str:
     try:
         equation: str = input()
         check_input(equation)
-    except RuntimeError as run_time_error:
-        print(run_time_error)
+    except InputErrorException as input_error:
+        print(input_error)
         return ""
     return equation
 
@@ -37,7 +50,7 @@ def calculate():
 
 
 def main():
-    calculate()
+    check_input("")
     return
 
 
