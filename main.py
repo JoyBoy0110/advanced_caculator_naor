@@ -1,5 +1,29 @@
 error_list = []
 
+
+class InputErrorException(RuntimeError):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "the input you have entered is an invalid input"
+
+
+def check_input(inpt: str):
+    raise RuntimeError
+
+
+def interface() -> str:
+    equation: str = ""
+    try:
+        equation: str = input()
+        check_input(equation)
+    except RuntimeError as run_time_error:
+        print(run_time_error)
+        return ""
+    return equation
+
+
 def calculate():
     while True:
         calc_str = interface()
