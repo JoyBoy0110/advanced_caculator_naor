@@ -16,11 +16,14 @@ class InputErrorException(RuntimeError):
 
 
 def check_input(inpt: str):
+    """
+
+    :param inpt:
+    :return:
+    """
     opr_set = operators_dict.keys()
     for char in inpt:
         if char.isalpha():
-            raise InputErrorException
-        if char.isspace():
             raise InputErrorException
         if not operators_dict.__contains__(char) and not char.isdigit():
             raise InputErrorException
@@ -30,6 +33,8 @@ def interface() -> str:
     equation: str = ""
     try:
         equation: str = input()
+        equation.replace(" ", "")
+        equation.replace("  ", "")
         check_input(equation)
     except InputErrorException as input_error:
         print(input_error)
@@ -37,15 +42,23 @@ def interface() -> str:
     return equation
 
 
+def check_and_return_value(calc_str: str) -> str:  # 1+2-3 => 12+3- => 0/ 1+2*3 => 123*+/ -1*2 => (-1)2*/ ~1+5 => (-1)5+
+    result: str = "0"
+
+    return result
+
+
 def calculate():
     while True:
-        calc_str = interface()
-        check_&_ret_value(calc_str)
-        if not error_list:
+        calc_str: str = interface()
+        try:
+            result: str = check_and_return_value(calc_str)
+        except Exception as e:
             badui()
-        escape: bool = end(escape)
-        if escape:
-            return
+        else:
+            escape: bool = to_end()
+            if escape:
+                return
 
 
 
