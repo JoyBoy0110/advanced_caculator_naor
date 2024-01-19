@@ -65,7 +65,7 @@ def calculate():
 
 
 def main():
-    _input = "0-3"
+    _input = "(0--~-3)"
     print(calculator_functions.str_to_list(_input))
     input_list = calculator_functions.infix_to_postfix(_input)
     print(input_list)
