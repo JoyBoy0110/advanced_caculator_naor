@@ -1,3 +1,5 @@
+import pytest
+import calculator_functions
 error_list = []
 operators_dict: dict = {'+': 1, '-': 1,
                         '*': 2, '/': 2,
@@ -63,8 +65,12 @@ def calculate():
 
 
 def main():
-    check_input("")
+    calculator_functions.infix_to_postfix2("1+2!-3+2*2-3!") # 12!+3-22*+3!-
     return
+
+
+def test_mytest():
+      assert check_and_return_value("1+2") == 3
 
 
 if __name__ == "__main__":
