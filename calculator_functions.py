@@ -1,29 +1,29 @@
 import math
-import calculator_exceptions
+from calculator_exceptions import InvalidInputException
+from calculator_exceptions import UndefinedException
+
 
 operators: dict = {'+': [1, 'in'], '-': [1, 'in'],
                    '*': [2, 'in'], '/': [2, 'in'],
                    '^': [3, 'in'], '@': [5, 'in'],
                    '$': [5, 'in'], '&': [5, 'in'],
                    '%': [4, 'in'], '~': [6, 'pre'],
+                   'N': [6.5, 'pre'],
                    '!': [6, 'post'], '#': [6, 'post'],
                    '(': [10, 'pre'], ')': [10, 'post'], }
 
 
 def infix_to_postfix(input_infix: str) -> list:
     try:
-        pass
-        # check_valid_input(input_infix)
-    except RuntimeError as run_error:
-        print(run_error)
-    else:
         infix_list: list = str_to_list(input_infix)
         infix_list = reduce_minuses(infix_list)
+        check_valid_input(infix_list)
+    except RuntimeError as run_error:
+        raise
+    else:
         operators_stack: list = []
-        postfix_list: list = []  # 1+2!-3 = 12!+3-
+        postfix_list: list = []
         for i in range(0, len(infix_list)):
-            if i == 8:
-                pass
             if type(infix_list[i]) is float:
                 postfix_list.append(infix_list[i])
             else:
@@ -73,17 +73,38 @@ def str_to_list(string: str) -> list:
     return result_list
 
 
-def check_valid_input(invalid_input: str):  # ----- => (delete: -, -, -, -)- => N, ~- => '', ---
+def check_valid_input(invalid_input: list):  # ~- => '', ---
     valid = 'V'
-    changable_str = str(invalid_input)
-    for i in range(0, len(changable_str)):
-        if changable_str[i] == '~' and i != 0:
-            if changable_str[i - 1].isdigit() and changable_str[i - 1] == '~':  # exception: 6~, ~~,
-                raise Exception
+    left_bracket_counter: int = 0
+    right_bracket_counter: int = 0
+    changeable_list = list(invalid_input)
+    for i in range(0, len(changeable_list)):
+        if changeable_list[i] == '~' and i != 0:  # exception: 6~, ~~, )~, 1--~2
+            if ((type(changeable_list[i + 1]) is not float or changeable_list[i - 1] == '-')
+                    and (type(changeable_list[i - 1].isdigit()) is float
+                         or changeable_list[i - 1] == '~' or changeable_list[i - 1] == ')')):
+                raise
+        if changeable_list[i] == '(':
+            left_bracket_counter += 1
+        if changeable_list[i] == ')':
+            right_bracket_counter += 1
+    #
+    if left_bracket_counter != right_bracket_counter:
+        error_char: str = ''
+        if left_bracket_counter > right_bracket_counter:
+            error_char = '('
+        else:
+            error_char = ')'
+        raise InvalidInputException(str("invalid input: there is an extra " + error_char))
 
 
 def reduce_minuses(infix_list: list) -> list:
     index: int = 0
+    while (infix_list[index] == '-' and infix_list[index + 1] == '-'
+           and (type(infix_list[index + 2]) is float or infix_list[index + 2] == '-' or infix_list[
+                index + 2] == '(') and index < len(infix_list)):
+        infix_list.pop(index)
+        infix_list.pop(index)
     while index < len(infix_list):
         if infix_list[index] == '-' and infix_list[index + 1] == '-':
             if index - 1 >= 0 and type(infix_list[index - 1]) is not float:
@@ -91,16 +112,26 @@ def reduce_minuses(infix_list: list) -> list:
                 infix_list.pop(index)
             else:
                 index += 1
+
         else:
             index += 1
+
     index: int = 0
     while index < len(infix_list):
         if infix_list[index] == '-':
-            if index - 1 >= 0 and type(infix_list[index - 1]) is not float:
+            if (index - 1 >= 0 and type(infix_list[index - 1]) is not float and (operators[infix_list[index - 1]])[
+                1] != 'post' and infix_list[index + 1] != '('
+                    and infix_list[index - 1] != ')'):
                 infix_list.pop(index)
                 num: float = float(infix_list[index])
                 infix_list[index] = 0 - num
         index += 1
+    for index in range(0, len(infix_list)):
+        if (infix_list[index] == '-' and (infix_list[index + 1] == '(' or type(infix_list[index + 1]) is float)
+                and (index == 0 or type(infix_list[index - 1]) is not float and (operators[infix_list[index - 1]])[
+                    1] != 'post')):
+            infix_list[index] = 'N'
+    print(infix_list)
     return infix_list
 
 
@@ -112,7 +143,10 @@ def postfix_to_result(postfix_list: list) -> float:
         elif operators.keys().__contains__(c):
             calculate_stack.append(c)
             print(calculate_stack)
-            post_calculate(calculate_stack)
+            try:
+                post_calculate(calculate_stack)
+            except Exception as exc:
+                raise
     return calculate_stack.pop(-1)
 
 
@@ -154,9 +188,10 @@ def post_calculate(stack: list):
             # left operators
             case '~':
                 result = math_not(operand1)
+            case 'N':
+                result = math_not(operand1)
     except Exception as exc:
-        print(exc)
-        return
+        raise
     stack.append(result)
 
 
@@ -174,19 +209,25 @@ def math_mul(operand1: float, operand2: float) -> float:
 
 def math_div(operand1: float, operand2: float) -> float or None:
     if operand2 == 0:
-        raise ZeroDivisionError
+        raise ZeroDivisionError("can't divide by zero")
+    if operand2 == 0 and operand1 == 0:
+        raise UndefinedException("undefined")
     return operand1 / operand2
 
 
 def math_mod(operand1: float, operand2: float) -> float or None:
-    if operand2 == 0:
-        raise ZeroDivisionError
+    if operand2 == 0 and operand1 != 0:
+        raise ZeroDivisionError("can't divide by zero")
+    if operand2 == 0 and operand1 == 0:
+        raise UndefinedException("undefined")
     return operand1 % operand2
 
 
 def math_pow(operand1: float, operand2: float) -> float or None:
     if operand1 == 0 and operand2 < 0:
-        raise ZeroDivisionError
+        raise ZeroDivisionError("can't divide by 0")
+    if operand1 == 0 and operand2 == 0:
+        raise UndefinedException("undefined")
     return math.pow(operand1, operand2)
 
 
@@ -217,7 +258,7 @@ def math_factorial(operand1: float) -> float:
         for i in range(int(operand1), 1, -1):
             if fact == float("inf"):
                 return fact
-            fact = fact * i
+            fact = fact * float(i)
 
     return fact
 

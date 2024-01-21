@@ -1,5 +1,6 @@
 import pytest
 import calculator_functions
+from calculator_exceptions import InvalidInputException
 
 error_list = []
 operators_dict: dict = {'+': 1, '-': 1,
@@ -57,24 +58,50 @@ def calculate():
         try:
             result: str = check_and_return_value(calc_str)
         except Exception as e:
-            badui()
+            pass
+            # badui()
         else:
-            escape: bool = to_end()
+            escape: bool = False
             if escape:
                 return
 
 
 def main():
-    _input = "(0--~-3)"
+    _input = "(-10)!"
+    _output: float
+    try:
+        _output = cal(_input)
+    except ArithmeticError as e:
+        print(e)
+    except InvalidInputException as e:
+        print(e)
+    else:
+        print(_output)
+
+
+def cal(_input: str) -> float:
+    input_list: list = []
     print(calculator_functions.str_to_list(_input))
-    input_list = calculator_functions.infix_to_postfix(_input)
-    print(input_list)
-    print(calculator_functions.postfix_to_result(input_list))
-    return
+    try:
+        input_list = calculator_functions.infix_to_postfix(_input)
+    except Exception as exc:
+        raise
+    else:
+        try:
+            result = calculator_functions.postfix_to_result(input_list)
+        except Exception as exc:
+            raise
+        else:
+            return result
 
 
-def test_mytest():
-    assert check_and_return_value("1+2") == 3
+@pytest.mark.parametrize("_input, result", [
+    ("1+2", 3.0),
+    ("((15 * ~2) / (3^2+1)) + 4! % 135#", 3.0),
+    ("(2^3 * ~5) + (10 / 32#) - 7", -45.0)
+])
+def test_mytest(_input, result):
+    assert cal(_input) == result
 
 
 if __name__ == "__main__":
