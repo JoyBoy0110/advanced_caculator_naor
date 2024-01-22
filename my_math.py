@@ -1,6 +1,14 @@
 from calculator_exceptions import UndefinedException
 from math import pow
 
+operators_dictionary: dict = {'+': [1, 'in'], '-': [1, 'in'],
+                              '*': [2, 'in'], '/': [2, 'in'],
+                              '^': [3, 'in'], '@': [5, 'in'],
+                              '$': [5, 'in'], '&': [5, 'in'],
+                              '%': [4, 'in'], '~': [6, 'pre'],
+                              'N': [6.5, 'pre'], 'UM': [3.5, 'pre'],
+                              '!': [6, 'post'], '#': [6, 'post'],
+                              '(': [10, 'pre'], ')': [10, 'post'], }
 
 def add(operand1: float, operand2: float) -> float:
     return operand1 + operand2

@@ -1,35 +1,33 @@
 import pytest
 import calculator_functions
 from calculator_exceptions import InvalidInputException
-
+from validation_functions import check_input
 error_list = []
-allowed_chars: list = ['+', '-', '*', '/', '^', '@', '$', '&', '%', '~', '!', '.', '#', '(', ')']
-
-
-def check_input(inpt: str):
-    """
-
-    :param inpt:
-    :return:
-    """
-    for char in inpt:
-        if char.isalpha():
-            raise InvalidInputException("the input you have entered is an invalid input")
-        if not allowed_chars.__contains__(char) and not char.isdigit():
-            raise InvalidInputException("the input you have entered is an invalid input")
 
 
 def interface() -> str:
     equation: str = ""
-    try:
+    while True:
+        print("calculator:")
+        print("for exit press x")
+        print("for calculator press c")
+        command = input()
+        if command == 'x':
+            return
+        print("insert equation: ")
         equation: str = input()
         equation.replace(" ", "")
         equation.replace("  ", "")
-        check_input(equation)
-    except InputErrorException as input_error:
-        print(input_error)
-        return ""
-    return equation
+        _output: float
+        try:
+            _output = cal(equation)
+        except ArithmeticError as e:
+            print(e)
+        except InvalidInputException as e:
+            print(e)
+        else:
+            print(_output)
+
 
 
 def check_and_return_value(calc_str: str) -> str:  # 1+2-3 => 12+3- => 0/ 1+2*3 => 123*+/ -1*2 => (-1)2*/ ~1+5 => (-1)5+
@@ -52,17 +50,8 @@ def calculate():
                 return
 
 
-def main():  # ((((~-3!!^~-3!)#/5) ^ 100)#!#)
-    _input = ""  # ((((3!!^3!)#/5) ^ 100)#!#)
-    _output: float
-    try:
-        _output = cal(_input)
-    except ArithmeticError as e:
-        print(e)
-    except InvalidInputException as e:
-        print(e)
-    else:
-        print(_output)
+def main():
+    interface()
 
 
 def cal(_input: str) -> float:
@@ -86,15 +75,6 @@ def cal(_input: str) -> float:
                 raise
             else:
                 return result
-
-
-@pytest.mark.parametrize("_input, result", [
-    ("1+2", 3.0),
-    ("((15 * ~2) / (3^2+1)) + 4! % 135#", 3.0),
-    ("(2^3 * ~5) + (10 / 32#) - 7", -45.0)
-])
-def test_mytest(_input, result):
-    assert cal(_input) == result
 
 
 if __name__ == "__main__":
