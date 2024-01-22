@@ -1,14 +1,12 @@
-import math
+import my_math
 from calculator_exceptions import InvalidInputException
-from calculator_exceptions import UndefinedException
-
 
 operators: dict = {'+': [1, 'in'], '-': [1, 'in'],
                    '*': [2, 'in'], '/': [2, 'in'],
                    '^': [3, 'in'], '@': [5, 'in'],
                    '$': [5, 'in'], '&': [5, 'in'],
                    '%': [4, 'in'], '~': [6, 'pre'],
-                   'N': [6.5, 'pre'],
+                   'N': [6.5, 'pre'], 'UM': [3.5, 'pre'],
                    '!': [6, 'post'], '#': [6, 'post'],
                    '(': [10, 'pre'], ')': [10, 'post'], }
 
@@ -18,12 +16,14 @@ def infix_to_postfix(input_infix: str) -> list:
         infix_list: list = str_to_list(input_infix)
         infix_list = reduce_minuses(infix_list)
         check_valid_input(infix_list)
-    except RuntimeError as run_error:
+    except Exception:
         raise
     else:
         operators_stack: list = []
         postfix_list: list = []
         for i in range(0, len(infix_list)):
+            if i == 12:
+                pass
             if type(infix_list[i]) is float:
                 postfix_list.append(infix_list[i])
             else:
@@ -61,12 +61,24 @@ def str_to_list(string: str) -> list:
     while i < len(string):
         if operators.keys().__contains__(string[i]):
             result_list.append(string[i])
-        if string[i].isdigit():
+        elif string[i].isdigit() or string[i] == '.':
             j: int = 0
-            num: float = 0
-            while j + i < len(string) and string[j + i].isdigit():
-                num = num * 10 + float(string[j + i])
+            post_point: float = 0.1
+            num: float = 0.0
+            point_counter: int = 0
+            while j + i < len(string) and (string[j + i].isdigit() or string[j + i] == '.'):
+                if string[j + i] == '.':
+                    if j + i != 0 and not string[j + i-1].isdigit() and not string[j + i+1].isdigit():
+                        raise InvalidInputException("can't enter '.' alone")
+                    point_counter += 1
+                if point_counter == 0:
+                    num = num * 10 + float(string[j + i])
+                elif string[j + i].isdigit():
+                    num = num + float(string[j + i]) * post_point
                 j += 1
+            num = round(num, 10)
+            if num == int(num) and point_counter != 0:
+                num += 0.0
             i += j - 1
             result_list.append(num)
         i += 1
@@ -74,7 +86,6 @@ def str_to_list(string: str) -> list:
 
 
 def check_valid_input(invalid_input: list):  # ~- => '', ---
-    valid = 'V'
     left_bracket_counter: int = 0
     right_bracket_counter: int = 0
     changeable_list = list(invalid_input)
@@ -90,7 +101,6 @@ def check_valid_input(invalid_input: list):  # ~- => '', ---
             right_bracket_counter += 1
     #
     if left_bracket_counter != right_bracket_counter:
-        error_char: str = ''
         if left_bracket_counter > right_bracket_counter:
             error_char = '('
         else:
@@ -122,15 +132,21 @@ def reduce_minuses(infix_list: list) -> list:
             if (index - 1 >= 0 and type(infix_list[index - 1]) is not float and (operators[infix_list[index - 1]])[
                 1] != 'post' and infix_list[index + 1] != '('
                     and infix_list[index - 1] != ')'):
-                infix_list.pop(index)
-                num: float = float(infix_list[index])
-                infix_list[index] = 0 - num
+                if index == 0 or infix_list[index - 1] == '(':
+                    infix_list[index] = 'UM'
+                else:
+                    infix_list.pop(index)
+                    num: float = float(infix_list[index])
+                    infix_list[index] = 0 - num
         index += 1
     for index in range(0, len(infix_list)):
         if (infix_list[index] == '-' and (infix_list[index + 1] == '(' or type(infix_list[index + 1]) is float)
                 and (index == 0 or type(infix_list[index - 1]) is not float and (operators[infix_list[index - 1]])[
                     1] != 'post')):
-            infix_list[index] = 'N'
+            if index == 0 or infix_list[index - 1] == '(':
+                infix_list[index] = 'UM'
+            else:
+                infix_list[index] = 'N'
     print(infix_list)
     return infix_list
 
@@ -140,13 +156,15 @@ def postfix_to_result(postfix_list: list) -> float:
     for c in postfix_list:
         if type(c) is float:
             calculate_stack.append(c)
+            print(calculate_stack)
         elif operators.keys().__contains__(c):
             calculate_stack.append(c)
             print(calculate_stack)
             try:
                 post_calculate(calculate_stack)
-            except Exception as exc:
+            except Exception:
                 raise
+
     return calculate_stack.pop(-1)
 
 
@@ -161,121 +179,38 @@ def post_calculate(stack: list):
         match operator:
             # in operators
             case '+':
-                result = math_add(operand1, operand2)
+                result = my_math.add(operand1, operand2)
             case '-':
-                result = math_sub(operand1, operand2)
+                result = my_math.sub(operand1, operand2)
             case '*':
-                result = math_mul(operand1, operand2)
+                result = my_math.mul(operand1, operand2)
             case '/':
-                result = math_div(operand1, operand2)
+                result = my_math.div(operand1, operand2)
             case '%':
-                result = math_mod(operand1, operand2)
+                result = my_math.mod(operand1, operand2)
             case '^':
-                result = math_pow(operand1, operand2)
+                result = my_math.my_pow(operand1, operand2)
             case '$':
-                result = math_max(operand1, operand2)
+                result = my_math.max(operand1, operand2)
             case '&':
-                result = math_min(operand1, operand2)
+                result = my_math.min(operand1, operand2)
             case '@':
-                result = math_avg(operand1, operand2)
+                result = my_math.avg(operand1, operand2)
 
             # right operators
             case '!':
-                result = math_factorial(operand1)
+                result = my_math.factorial(operand1)
             case '#':
-                result = math_sum_of_digits(operand1)
+                result = my_math.sum_of_digits(operand1)
 
             # left operators
             case '~':
-                result = math_not(operand1)
+                result = my_math.arithmetic_not(operand1)
             case 'N':
-                result = math_not(operand1)
-    except Exception as exc:
+                result = my_math.arithmetic_not(operand1)
+            case 'UM':
+                result = my_math.arithmetic_not(operand1)
+    except Exception:
         raise
+    result = round(result, 100)
     stack.append(result)
-
-
-def math_add(operand1: float, operand2: float) -> float:
-    return operand1 + operand2
-
-
-def math_sub(operand1: float, operand2: float) -> float:
-    return operand1 - operand2
-
-
-def math_mul(operand1: float, operand2: float) -> float:
-    return operand1 * operand2
-
-
-def math_div(operand1: float, operand2: float) -> float or None:
-    if operand2 == 0:
-        raise ZeroDivisionError("can't divide by zero")
-    if operand2 == 0 and operand1 == 0:
-        raise UndefinedException("undefined")
-    return operand1 / operand2
-
-
-def math_mod(operand1: float, operand2: float) -> float or None:
-    if operand2 == 0 and operand1 != 0:
-        raise ZeroDivisionError("can't divide by zero")
-    if operand2 == 0 and operand1 == 0:
-        raise UndefinedException("undefined")
-    return operand1 % operand2
-
-
-def math_pow(operand1: float, operand2: float) -> float or None:
-    if operand1 == 0 and operand2 < 0:
-        raise ZeroDivisionError("can't divide by 0")
-    if operand1 == 0 and operand2 == 0:
-        raise UndefinedException("undefined")
-    return math.pow(operand1, operand2)
-
-
-def math_max(operand1: float, operand2: float) -> float:
-    if operand1 > operand2:
-        return operand1
-    return operand2
-
-
-def math_min(operand1: float, operand2: float) -> float:
-    if operand1 <= operand2:
-        return operand1
-    return operand2
-
-
-def math_avg(operand1: float, operand2: float) -> float:
-    return (operand1 + operand2) / 2
-
-
-def math_factorial(operand1: float) -> float:
-    if operand1 < 0:
-        raise Exception
-    if (operand1 - int(operand1)) != 0:
-        raise Exception
-
-    fact: float = 1
-    if operand1 != 0:
-        for i in range(int(operand1), 1, -1):
-            if fact == float("inf"):
-                return fact
-            fact = fact * float(i)
-
-    return fact
-
-
-def math_sum_of_digits(operand1: float) -> float:
-    """
-
-    :param operand1:
-    :return:
-    """
-    sum_of_digits: float = 0
-    while operand1 / 10 != 0:
-        sum_of_digits += operand1 % 10
-        operand1 = float(int(operand1 / 10))
-    sum_of_digits += operand1 % 10
-    return sum_of_digits
-
-
-def math_not(operand1: float) -> float:
-    return -operand1

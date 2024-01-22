@@ -3,20 +3,7 @@ import calculator_functions
 from calculator_exceptions import InvalidInputException
 
 error_list = []
-operators_dict: dict = {'+': 1, '-': 1,
-                        '*': 2, '/': 2,
-                        '^': 3, '@': 5,
-                        '$': 5, '&': 5,
-                        '%': 4, '~': 6,
-                        '!': 6}
-
-
-class InputErrorException(RuntimeError):
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        return "the input you have entered is an invalid input"
+allowed_chars: list = ['+', '-', '*', '/', '^', '@', '$', '&', '%', '~', '!', '.', '#', '(', ')']
 
 
 def check_input(inpt: str):
@@ -25,12 +12,11 @@ def check_input(inpt: str):
     :param inpt:
     :return:
     """
-    opr_set = operators_dict.keys()
     for char in inpt:
         if char.isalpha():
-            raise InputErrorException
-        if not operators_dict.__contains__(char) and not char.isdigit():
-            raise InputErrorException
+            raise InvalidInputException("the input you have entered is an invalid input")
+        if not allowed_chars.__contains__(char) and not char.isdigit():
+            raise InvalidInputException("the input you have entered is an invalid input")
 
 
 def interface() -> str:
@@ -66,8 +52,8 @@ def calculate():
                 return
 
 
-def main():
-    _input = "(-10)!"
+def main():  # ((((~-3!!^~-3!)#/5) ^ 100)#!#)
+    _input = ""  # ((((3!!^3!)#/5) ^ 100)#!#)
     _output: float
     try:
         _output = cal(_input)
@@ -81,18 +67,25 @@ def main():
 
 def cal(_input: str) -> float:
     input_list: list = []
-    print(calculator_functions.str_to_list(_input))
     try:
-        input_list = calculator_functions.infix_to_postfix(_input)
-    except Exception as exc:
+        _input = _input.replace(" ", "")
+        _input = _input.replace("  ", "")
+        check_input(_input)
+    except Exception:
         raise
     else:
+        print(calculator_functions.str_to_list(_input))
         try:
-            result = calculator_functions.postfix_to_result(input_list)
-        except Exception as exc:
+            input_list = calculator_functions.infix_to_postfix(_input)
+        except Exception:
             raise
         else:
-            return result
+            try:
+                result = calculator_functions.postfix_to_result(input_list)
+            except Exception:
+                raise
+            else:
+                return result
 
 
 @pytest.mark.parametrize("_input, result", [
